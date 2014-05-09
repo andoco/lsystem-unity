@@ -15,7 +15,7 @@ public class LSystemController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		this.lsys = new LSystem.LSystem();
-		lsys.Segment = new UnitySegmentDrawer();
+		lsys.Segment = new CylinderSegmentDrawer();
 		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
 //		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
 
@@ -26,22 +26,22 @@ public class LSystemController : MonoBehaviour {
 	{
 		if (this.time < this.totalTime)
 		{
-			lsys.Draw(Vector3.zero, this.generations, this.time, 0f);
+			lsys.Draw(Vector3.zero, this.generations, this.time, 3f);
 			this.time += Time.deltaTime / 2f;
 		}
 	}
 }
 
-public class UnitySegmentDrawer : ISegmentDrawer
+public class VectorLineSegmentDrawer : ISegmentDrawer
 {
 	private Dictionary<int, VectorLine> lines = new Dictionary<int, VectorLine>();
 
 	#region ISegmentDrawer implementation
-
+	
 	public void Segment (Vector3 from, Vector3 to, int generation, float time, int id)
 	{
 		VectorLine line;
-		Debug.Log(id);
+
 		if (this.lines.TryGetValue(id, out line))
 		{
 			line.points3[0] = from;
@@ -54,5 +54,28 @@ public class UnitySegmentDrawer : ISegmentDrawer
 		}
 	}
 
+	#endregion
+}
+
+public class CylinderSegmentDrawer : ISegmentDrawer
+{
+	private Dictionary<int, Transform> segments = new Dictionary<int, Transform>();
+
+	#region ISegmentDrawer implementation
+	
+	public void Segment(Vector3 from, Vector3 to, int generation, float time, int id)
+	{
+		Transform seg;
+		if (!this.segments.TryGetValue(id, out seg))
+		{
+			seg = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
+			this.segments[id] = seg;
+		}
+
+		seg.localScale = (new Vector3(0.25f, 1f, 0.25f)) * (Vector3.Distance(from, to) * 0.5f);
+		seg.position = Vector3.Lerp(from, to, 0.5f);
+		seg.localRotation = Quaternion.FromToRotation(Vector3.up, to - from);
+	}
+	
 	#endregion
 }
