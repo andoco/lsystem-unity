@@ -182,6 +182,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   generations: 10
+  angleAxis: {x: 0, y: 0, z: 1}
+  segmentAxis: {x: 0, y: 1, z: 0}
 --- !u!4 &1700640572
 Transform:
   m_ObjectHideFlags: 0

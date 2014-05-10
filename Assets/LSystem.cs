@@ -17,7 +17,11 @@
 
         public float Angle { get; set; }
 
+		public Vector3 AngleAxis { get; set; }
+
         public float SegmentLength { get; set; }
+
+		public Vector3 SegmentAxis { get; set; }
 
         public float Threshold { get; set; }
 
@@ -38,7 +42,9 @@
         public LSystem()
         {
             this.Angle = 20;
+			this.AngleAxis = Vector3.forward;
             this.SegmentLength = 1;
+			this.SegmentAxis = Vector3.up;
             this.Decrease = 0.7f;
 //            this.Threshold = 3.0f;
 			this.Threshold = 0.001f;
@@ -87,13 +93,13 @@
                 // < and > decrease or increases the segment length,
                 // ( and ) decrease or increases the rotation angle.
                 if (rule == "f")
-                    this.Ctx.Translate(new Vector3(0f, -Math.Min(length, length*time), 0f));
+					this.Ctx.Translate(this.SegmentAxis * -Math.Min(length, length*time)); //this.Ctx.Translate(new Vector3(0f, -Math.Min(length, length*time), 0f));
                 else if (rule == "-")
-                    this.Ctx.Rotate(Vector3.forward, Math.Min(+angle, +angle*time));
+                    this.Ctx.Rotate(this.AngleAxis, Math.Min(+angle, +angle*time));
                 else if (rule == "+")
-					this.Ctx.Rotate(Vector3.forward, Math.Max(-angle, -angle*time));
+					this.Ctx.Rotate(this.AngleAxis, Math.Max(-angle, -angle*time));
                 else if (rule == "|")
-					this.Ctx.Rotate(Vector3.forward, 180f);
+					this.Ctx.Rotate(this.AngleAxis, 180f);
                 else if (rule == "[")
                     this.Ctx.Push();
                 else if (rule == "]")
@@ -140,7 +146,7 @@
                     var state = this.Ctx.CurrentState;
                     var p1 = state.Translation;
 
-                    this.Ctx.Translate(new Vector3(0f, length, 0f));
+					this.Ctx.Translate(this.SegmentAxis * length);
 
                     var p2 = state.Translation;
 
