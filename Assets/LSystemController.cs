@@ -26,8 +26,10 @@ public class LSystemController : MonoBehaviour {
 	{
 		if (this.time < this.totalTime)
 		{
+			lsys.Segment.DrawStart();
 			lsys.Draw(Vector3.zero, this.generations, this.time, 3f);
 			this.time += Time.deltaTime / 2f;
+			lsys.Segment.DrawEnd();
 		}
 	}
 }
@@ -37,6 +39,14 @@ public class VectorLineSegmentDrawer : ISegmentDrawer
 	private Dictionary<int, VectorLine> lines = new Dictionary<int, VectorLine>();
 
 	#region ISegmentDrawer implementation
+
+	public void DrawStart()
+	{
+	}
+
+	public void DrawEnd()
+	{
+	}
 	
 	public void Segment (Vector3 from, Vector3 to, int generation, float time, int id)
 	{
@@ -60,8 +70,25 @@ public class VectorLineSegmentDrawer : ISegmentDrawer
 public class CylinderSegmentDrawer : ISegmentDrawer
 {
 	private Dictionary<int, Transform> segments = new Dictionary<int, Transform>();
+	private HashSet<int> visited = new HashSet<int>();
 
 	#region ISegmentDrawer implementation
+
+	public void DrawStart()
+	{
+		this.visited.Clear();
+	}
+
+	public void DrawEnd()
+	{
+		foreach (var item in this.segments)
+		{
+			if (!this.visited.Contains(item.Key))
+			{
+				item.Value.renderer.enabled = false;
+			}
+		}
+	}
 	
 	public void Segment(Vector3 from, Vector3 to, int generation, float time, int id)
 	{
@@ -75,6 +102,9 @@ public class CylinderSegmentDrawer : ISegmentDrawer
 		seg.localScale = (new Vector3(0.25f, 1f, 0.25f)) * (Vector3.Distance(from, to) * 0.5f);
 		seg.position = Vector3.Lerp(from, to, 0.5f);
 		seg.localRotation = Quaternion.FromToRotation(Vector3.up, to - from);
+		seg.renderer.enabled = true;
+
+		this.visited.Add(id);
 	}
 	
 	#endregion
