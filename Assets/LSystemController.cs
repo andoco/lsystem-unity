@@ -22,8 +22,13 @@ public class LSystemController : MonoBehaviour {
 		lsys.Segment = new CylinderSegmentDrawer();
 
 //		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
-		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
+//		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
 //		lsys.Rules = new Dictionary<string, string> { { "1", "F+F-F([1]" } };
+
+		lsys.Rules = new Dictionary<string, string> {
+			{ "1", "FFF+[2]F+(>[---1]" },
+			{ "2", "FFF[1]+[1]+[1]+[1]" }
+		};
 
 		lsys.AngleAxis = this.angleAxis;
 		lsys.Angle = this.angle;

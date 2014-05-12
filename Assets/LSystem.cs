@@ -43,7 +43,7 @@
         public LSystem()
         {
             this.Decrease = 0.7f;
-			this.Threshold = 0.01f;
+			this.Threshold = 0.1f;
             this.Cost = 0.25f;
             this.Root = "1";
 
@@ -94,21 +94,9 @@
 					cmd.Run(this, this.Ctx, generation, c, ref genState);
 				}
 
-	            if (c == "F") 
-					genState.time -= this.Cost;
-	            else if (c == "!")
-					genState.angle -= genState.angle;
-	            else if (c == "(") 
-					genState.angle *= 1.1f;
-	            else if (c == ")") 
-					genState.angle *= 0.9f;
-	            else if (c == "<") 
-					genState.length *= 0.9f;
-	            else if (c == ">") 
-					genState.length *= 1.1f;
-
 				if (c == "F" || c == "")
 				{
+					genState.time -= this.Cost;
 	                this.segments++;
 	
 					if (draw && genState.time >= 0)
@@ -212,7 +200,24 @@
 
 		#region ILSysCommand implementation
 
-		public string[] CommandConstants { get { return new [] { "f", "-", "+", "|", "[", "]" }; } }
+		public string[] CommandConstants { 
+			get
+			{
+				return new [] { 
+					"f", 
+					"-", 
+					"+", 
+					"|", 
+					"[", 
+					"]",
+					"!",
+					"(",
+					")",
+					"<",
+					">"
+				};
+			} 
+		}
 
 		public void Run (ILSystem lSystem, IDrawContext drawCtx, int generation, string c, ref GenerationState genState)
 		{
@@ -234,6 +239,18 @@
 				drawCtx.Push();
 			else if (c == "]")
 				drawCtx.Pop();
+
+			// Non-drawing constants
+			else if (c == "!")
+				genState.angle -= genState.angle;
+			else if (c == "(") 
+				genState.angle *= 1.1f;
+			else if (c == ")") 
+				genState.angle *= 0.9f;
+			else if (c == "<") 
+				genState.length *= 0.9f;
+			else if (c == ">") 
+				genState.length *= 1.1f;
 		}
 
 		#endregion
