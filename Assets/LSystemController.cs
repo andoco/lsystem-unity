@@ -18,12 +18,16 @@ public class LSystemController : MonoBehaviour {
 	void Start () {
 		this.lsys = new LSystem.LSystem();
 		lsys.Segment = new CylinderSegmentDrawer();
-		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
-//		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
+//		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
+		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
+//		lsys.Rules = new Dictionary<string, string> { { "1", "F+F-F([1]" } };
 		lsys.AngleAxis = this.angleAxis;
 		lsys.SegmentAxis = this.segmentAxis;
 
 		this.totalTime = lsys.Duration(this.generations);
+		Debug.Log(string.Format("totalTime = {0}", this.totalTime));
+
+//		lsys.Draw(Vector3.zero, this.generations);
 	}
 
 	void Update()
@@ -109,6 +113,28 @@ public class CylinderSegmentDrawer : ISegmentDrawer
 		seg.renderer.enabled = true;
 
 		this.visited.Add(id);
+	}
+	
+	#endregion
+}
+
+public class MeshExtrudeSegmentDrawer : ISegmentDrawer
+{
+	#region ISegmentDrawer implementation
+	
+	public void DrawStart()
+	{
+	}
+	
+	public void DrawEnd()
+	{
+	}
+	
+	public void Segment(Vector3 from, Vector3 to, int generation, float time, int id)
+	{
+		// Scale vertices based on Ctx.Scale
+
+		// Extrude vertices from -> to
 	}
 	
 	#endregion
