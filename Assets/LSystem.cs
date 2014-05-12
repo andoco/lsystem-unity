@@ -9,7 +9,7 @@
     public class LSystem : ILSystem
     {
         private const float LSYS_DURATION_MAX = 100000f;
-
+		
         private int segments;
 
         private float duration;
@@ -68,16 +68,16 @@
             this.duration = 0;
         }
 		
-        public void DrawGeneration(int generation, string rule, float angle, float length, float time, bool draw)
+        public void DrawGeneration(int generation, string rule, GenerationState genState, bool draw)
         {
             if (generation == 0)
             {
-                this.duration = 1 + (LSYS_DURATION_MAX - time);
+                this.duration = 1 + (LSYS_DURATION_MAX - genState.time);
             }
 
-            if (length <= this.Threshold)
+			if (genState.length <= this.Threshold)
             {
-                this.duration = 1 + (LSYS_DURATION_MAX - time);
+				this.duration = 1 + (LSYS_DURATION_MAX - genState.time);
             }
 
 			if (!this.ExpandRule(rule, out rule))
@@ -91,40 +91,40 @@
 				if (this.Commands.TryGetValue(c, out cmd))
 				{
 //					Debug.Log(string.Format("running cmd {0}", rule));
-					cmd.Run(this, this.Ctx, generation, c, angle, length, time);
+					cmd.Run(this, this.Ctx, generation, c, ref genState);
 				}
 
 	            if (c == "F") 
-	                time -= this.Cost;
+					genState.time -= this.Cost;
 	            else if (c == "!")
-	                angle -= angle;
+					genState.angle -= genState.angle;
 	            else if (c == "(") 
-	                angle *= 1.1f;
+					genState.angle *= 1.1f;
 	            else if (c == ")") 
-	                angle *= 0.9f;
+					genState.angle *= 0.9f;
 	            else if (c == "<") 
-	                length *= 0.9f;
+					genState.length *= 0.9f;
 	            else if (c == ">") 
-	                length *= 1.1f;
+					genState.length *= 1.1f;
 
 				if (c == "F" || c == "")
 				{
 	                this.segments++;
 	
-	                if (draw && time >= 0)
+					if (draw && genState.time >= 0)
 	                {
-	                    length = Math.Min(length, length * time);
+						genState.length = Math.Min(genState.length, genState.length * genState.time);
 	
 	                    var state = this.Ctx.CurrentState;
 	                    var p1 = state.Translation;
 	
-						this.Ctx.Translate(this.SegmentAxis * length);
+						this.Ctx.Translate(this.SegmentAxis * genState.length);
 	
 	                    var p2 = state.Translation;
 	
 	                    if (timed)
 	                    {
-	                        this.Segment.Segment(p1, p2, generation, time, this.segments);
+							this.Segment.Segment(p1, p2, generation, genState.time, this.segments);
 	                    }
 	                    else
 	                    {
@@ -133,9 +133,9 @@
 	                }
 				}
 
-				if (generation > 0 && time > 0)
+				if (generation > 0 && genState.time > 0)
 				{
-					this.DrawGeneration(generation - 1, c, angle, length * this.Decrease, time, draw);
+					this.DrawGeneration(generation - 1, c, new GenerationState { angle = genState.angle, length = genState.length * this.Decrease, time = genState.time }, draw);
 				}
         	}
         }
@@ -144,7 +144,7 @@
         {
             this.Ctx.Push();
             this.Reset();
-            this.DrawGeneration(generation, this.Root, this.Angle, this.SegmentLength, LSYS_DURATION_MAX, false);
+			this.DrawGeneration(generation, this.Root, new GenerationState { angle = this.Angle, length = this.SegmentLength, time = LSYS_DURATION_MAX }, false);
             this.Ctx.Pop();
 
             return this.duration;
@@ -171,7 +171,7 @@
             this.Ctx.Push();
             this.Ctx.Translate(pos);
             this.Reset();
-            this.DrawGeneration(generation, this.Root, angleToUse, this.SegmentLength, time, true);
+			this.DrawGeneration(generation, this.Root, new GenerationState { angle = angleToUse, length = this.SegmentLength, time = time }, true);
             this.Ctx.Pop();
         }
 
@@ -214,7 +214,7 @@
 
 		public string[] CommandConstants { get { return new [] { "f", "-", "+", "|", "[", "]" }; } }
 
-		public void Run (ILSystem lSystem, IDrawContext drawCtx, int generation, string c, float angle, float length, float time)
+		public void Run (ILSystem lSystem, IDrawContext drawCtx, int generation, string c, ref GenerationState genState)
 		{
 			// Standard command symbols:
 			// f signifies a move,
@@ -223,11 +223,11 @@
 			// < and > decrease or increases the segment length,
 			// ( and ) decrease or increases the rotation angle.
 			if (c == "f")
-				drawCtx.Translate(this.SegmentAxis * -Math.Min(length, length*time));
+				drawCtx.Translate(this.SegmentAxis * -Math.Min(genState.length, genState.length * genState.time));
 			else if (c == "-")
-				drawCtx.Rotate(this.AngleAxis, Math.Min(+angle, +angle*time));
+				drawCtx.Rotate(this.AngleAxis, Math.Min(+genState.angle, +genState.angle * genState.time));
 			else if (c == "+")
-				drawCtx.Rotate(this.AngleAxis, Math.Max(-angle, -angle*time));
+				drawCtx.Rotate(this.AngleAxis, Math.Max(-genState.angle, -genState.angle * genState.time));
 			else if (c == "|")
 				drawCtx.Rotate(this.AngleAxis, 180f);
 			else if (c == "[")
