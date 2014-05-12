@@ -9,20 +9,14 @@
     public class LSystem : ILSystem
     {
         private const float LSYS_DURATION_MAX = 100000f;
-		
-        private int segments;
 
         private float duration;
 
-        private bool timed;
+		public bool Timed { get; private set; }
 
         public float Angle { get; set; }
 
-		public Vector3 AngleAxis { get; set; }
-
         public float SegmentLength { get; set; }
-
-		public Vector3 SegmentAxis { get; set; }
 
         public float Threshold { get; set; }
 
@@ -32,19 +26,14 @@
 
         public float Decrease { get; set; }
 
-        public float Cost { get; set; }
-
         public string Root { get; set; }
 
         public IDrawContext Ctx { get; set; }
-
-        public ISegmentDrawer Segment { get; set; }
 
         public LSystem()
         {
             this.Decrease = 0.7f;
 			this.Threshold = 0.1f;
-            this.Cost = 0.25f;
             this.Root = "1";
 
             this.Rules = new Dictionary<string, string> { { "1", "FF-1" } };
@@ -64,7 +53,8 @@
 
         public void Reset()
         {
-            this.segments = 0;
+			// TODO: reset commands
+//            this.segments = 0;
             this.duration = 0;
         }
 		
@@ -92,33 +82,6 @@
 				{
 //					Debug.Log(string.Format("running cmd {0}", rule));
 					cmd.Run(this, this.Ctx, generation, c, ref genState);
-				}
-
-				if (c == "F" || c == "")
-				{
-					genState.time -= this.Cost;
-	                this.segments++;
-	
-					if (draw && genState.time >= 0)
-	                {
-						genState.length = Math.Min(genState.length, genState.length * genState.time);
-	
-	                    var state = this.Ctx.CurrentState;
-	                    var p1 = state.Translation;
-	
-						this.Ctx.Translate(this.SegmentAxis * genState.length);
-	
-	                    var p2 = state.Translation;
-	
-	                    if (timed)
-	                    {
-							this.Segment.Segment(p1, p2, generation, genState.time, this.segments);
-	                    }
-	                    else
-	                    {
-	                        this.Segment.Segment(p1, p2, generation, -1, this.segments);
-	                    }
-	                }
 				}
 
 				if (generation > 0 && genState.time > 0)
@@ -149,10 +112,10 @@
             if (time != -1 && ease != -1)
                 angleToUse = Math.Min(this.Angle, this.Angle * time / ease);
         
-            this.timed = true;
+            this.Timed = true;
             if (time == -1)
             {
-                this.timed = false;
+                this.Timed = false;
                 time = LSYS_DURATION_MAX;
             }
 
@@ -179,80 +142,4 @@
 
 		#endregion
     }
-
-	public class CommonCommands : ILSysCommand
-	{
-		public CommonCommands()
-		{
-			this.Angle = 20;
-			this.AngleAxis = Vector3.forward;
-			this.SegmentLength = 1;
-			this.SegmentAxis = Vector3.up;
-		}
-
-		public float Angle { get; set; }
-		
-		public Vector3 AngleAxis { get; set; }
-		
-		public float SegmentLength { get; set; }
-		
-		public Vector3 SegmentAxis { get; set; }
-
-		#region ILSysCommand implementation
-
-		public string[] CommandConstants { 
-			get
-			{
-				return new [] { 
-					"f", 
-					"-", 
-					"+", 
-					"|", 
-					"[", 
-					"]",
-					"!",
-					"(",
-					")",
-					"<",
-					">"
-				};
-			} 
-		}
-
-		public void Run (ILSystem lSystem, IDrawContext drawCtx, int generation, string c, ref GenerationState genState)
-		{
-			// Standard command symbols:
-			// f signifies a move,
-			// + and - rotate either left or right, | rotates 180 degrees,
-			// [ and ] are for push() and pop(), e.g. offshoot branches,
-			// < and > decrease or increases the segment length,
-			// ( and ) decrease or increases the rotation angle.
-			if (c == "f")
-				drawCtx.Translate(this.SegmentAxis * -Math.Min(genState.length, genState.length * genState.time));
-			else if (c == "-")
-				drawCtx.Rotate(this.AngleAxis, Math.Min(+genState.angle, +genState.angle * genState.time));
-			else if (c == "+")
-				drawCtx.Rotate(this.AngleAxis, Math.Max(-genState.angle, -genState.angle * genState.time));
-			else if (c == "|")
-				drawCtx.Rotate(this.AngleAxis, 180f);
-			else if (c == "[")
-				drawCtx.Push();
-			else if (c == "]")
-				drawCtx.Pop();
-
-			// Non-drawing constants
-			else if (c == "!")
-				genState.angle -= genState.angle;
-			else if (c == "(") 
-				genState.angle *= 1.1f;
-			else if (c == ")") 
-				genState.angle *= 0.9f;
-			else if (c == "<") 
-				genState.length *= 0.9f;
-			else if (c == ">") 
-				genState.length *= 1.1f;
-		}
-
-		#endregion
-	}
 }

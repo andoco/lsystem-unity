@@ -11,6 +11,8 @@
 
     public interface ILSystem
     {
+		bool Timed { get; }
+
 		void AddCommand(ILSysCommand cmd);
 
         void Reset();

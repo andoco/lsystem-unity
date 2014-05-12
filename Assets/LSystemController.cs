@@ -9,6 +9,7 @@ public class LSystemController : MonoBehaviour {
 	private float totalTime;
 	private float time;
 	private LSystem.LSystem lsys;
+	private ISegmentDrawer segmentDrawer;
 	
 	public int generations = 6;
 	public Vector3 angleAxis = Vector3.forward;
@@ -19,20 +20,17 @@ public class LSystemController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		this.lsys = new LSystem.LSystem();
-		lsys.Segment = new CylinderSegmentDrawer();
 
-//		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
+		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
 //		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
 //		lsys.Rules = new Dictionary<string, string> { { "1", "F+F-F([1]" } };
 
-		lsys.Rules = new Dictionary<string, string> {
-			{ "1", "FFF+[2]F+(>[---1]" },
-			{ "2", "FFF[1]+[1]+[1]+[1]" }
-		};
+//		lsys.Rules = new Dictionary<string, string> {
+//			{ "1", "FFF+[2]F+(>[---1]" },
+//			{ "2", "FFF[1]+[1]+[1]+[1]" }
+//		};
 
-		lsys.AngleAxis = this.angleAxis;
 		lsys.Angle = this.angle;
-		lsys.SegmentAxis = this.segmentAxis;
 		lsys.SegmentLength = this.segmentLength;
 
 		var cmd = new CommonCommands();
@@ -41,6 +39,13 @@ public class LSystemController : MonoBehaviour {
 		cmd.SegmentAxis = this.segmentAxis;
 		cmd.SegmentLength = this.segmentLength;
 		lsys.AddCommand(cmd);
+
+		this.segmentDrawer = new CylinderSegmentDrawer();
+		var segCmd = new SegmentCommand();
+		segCmd.Segment = this.segmentDrawer;
+		segCmd.SegmentAxis = this.segmentAxis;
+
+		lsys.AddCommand(segCmd);
 
 		this.totalTime = lsys.Duration(this.generations);
 		Debug.Log(string.Format("totalTime = {0}", this.totalTime));
@@ -52,10 +57,10 @@ public class LSystemController : MonoBehaviour {
 	{
 		if (this.time < this.totalTime)
 		{
-			lsys.Segment.DrawStart();
+			this.segmentDrawer.DrawStart();
 			lsys.Draw(Vector3.zero, this.generations, this.time, 3f);
 			this.time += Time.deltaTime / 2f;
-			lsys.Segment.DrawEnd();
+			this.segmentDrawer.DrawEnd();
 		}
 	}
 }
