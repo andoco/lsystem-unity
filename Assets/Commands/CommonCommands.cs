@@ -1,4 +1,4 @@
-namespace LSystem
+namespace LSystem.Commands
 {
 	using System;
 	using System.Collections.Generic;
