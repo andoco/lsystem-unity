@@ -4,6 +4,8 @@
 
     public interface ILSystem
     {
+		void AddCommand(ILSysCommand cmd);
+
         void Reset();
 
         void DrawGeneration(int generation, string rule, float angle, float length, float time, bool draw);

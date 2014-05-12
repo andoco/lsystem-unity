@@ -12,17 +12,30 @@ public class LSystemController : MonoBehaviour {
 	
 	public int generations = 6;
 	public Vector3 angleAxis = Vector3.forward;
+	public float angle = 20f;
 	public Vector3 segmentAxis = Vector3.up;
+	public float segmentLength = 1;
 
 	// Use this for initialization
 	void Start () {
 		this.lsys = new LSystem.LSystem();
 		lsys.Segment = new CylinderSegmentDrawer();
+
 //		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F" } };
 		lsys.Rules = new Dictionary<string, string> { { "1", "FF-[1]++F+F+1" } };
 //		lsys.Rules = new Dictionary<string, string> { { "1", "F+F-F([1]" } };
+
 		lsys.AngleAxis = this.angleAxis;
+		lsys.Angle = this.angle;
 		lsys.SegmentAxis = this.segmentAxis;
+		lsys.SegmentLength = this.segmentLength;
+
+		var cmd = new CommonCommands();
+		cmd.Angle = this.angle;
+		cmd.AngleAxis = this.angleAxis;
+		cmd.SegmentAxis = this.segmentAxis;
+		cmd.SegmentLength = this.segmentLength;
+		lsys.AddCommand(cmd);
 
 		this.totalTime = lsys.Duration(this.generations);
 		Debug.Log(string.Format("totalTime = {0}", this.totalTime));

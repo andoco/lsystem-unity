@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Linq;
 
 	using UnityEngine;
 
@@ -41,12 +42,7 @@
 
         public LSystem()
         {
-            this.Angle = 20;
-			this.AngleAxis = Vector3.forward;
-            this.SegmentLength = 1;
-			this.SegmentAxis = Vector3.up;
             this.Decrease = 0.7f;
-//            this.Threshold = 3.0f;
 			this.Threshold = 0.01f;
             this.Cost = 0.25f;
             this.Root = "1";
@@ -55,6 +51,16 @@
 			this.Commands = new Dictionary<string, ILSysCommand>();
 			this.Ctx = new DrawContext();
         }
+
+		public void AddCommand(ILSysCommand cmd)
+		{
+			foreach (var c in cmd.CommandConstants)
+			{
+				this.Commands[c] = cmd;
+			}
+
+			Debug.Log(string.Format("Commands = {0}", string.Join(",", this.Commands.Keys.ToArray())));
+		}
 
         public void Reset()
         {
@@ -74,16 +80,6 @@
                 this.duration = 1 + (LSYS_DURATION_MAX - time);
             }
 
-            // Custom command symbols:
-            // If the rule is a key in the LSsytem.commands dictionary,
-            // execute its value which is a function taking 6 parameters:
-            // lsystem, generation, rule, angle, length and time.
-            ILSysCommand cmd;
-            if (this.Commands.TryGetValue(rule, out cmd))
-            {
-                cmd.Run(this, generation, rule, angle, length, time);
-            }
-
 			if (!this.ExpandRule(rule, out rule))
 				return;
 
@@ -91,26 +87,11 @@
         	{
 				var c = Convert.ToString(rule[i]);
 
-				if (draw)
+				ILSysCommand cmd;
+				if (this.Commands.TryGetValue(c, out cmd))
 				{
-					// Standard command symbols:
-					// f signifies a move,
-					// + and - rotate either left or right, | rotates 180 degrees,
-					// [ and ] are for push() and pop(), e.g. offshoot branches,
-					// < and > decrease or increases the segment length,
-					// ( and ) decrease or increases the rotation angle.
-					if (c == "f")
-						this.Ctx.Translate(this.SegmentAxis * -Math.Min(length, length*time)); //this.Ctx.Translate(new Vector3(0f, -Math.Min(length, length*time), 0f));
-					else if (c == "-")
-						this.Ctx.Rotate(this.AngleAxis, Math.Min(+angle, +angle*time));
-					else if (c == "+")
-						this.Ctx.Rotate(this.AngleAxis, Math.Max(-angle, -angle*time));
-					else if (c == "|")
-						this.Ctx.Rotate(this.AngleAxis, 180f);
-					else if (c == "[")
-						this.Ctx.Push();
-					else if (c == "]")
-						this.Ctx.Pop();
+//					Debug.Log(string.Format("running cmd {0}", rule));
+					cmd.Run(this, this.Ctx, generation, c, angle, length, time);
 				}
 
 	            if (c == "F") 
@@ -210,4 +191,51 @@
 
 		#endregion
     }
+
+	public class CommonCommands : ILSysCommand
+	{
+		public CommonCommands()
+		{
+			this.Angle = 20;
+			this.AngleAxis = Vector3.forward;
+			this.SegmentLength = 1;
+			this.SegmentAxis = Vector3.up;
+		}
+
+		public float Angle { get; set; }
+		
+		public Vector3 AngleAxis { get; set; }
+		
+		public float SegmentLength { get; set; }
+		
+		public Vector3 SegmentAxis { get; set; }
+
+		#region ILSysCommand implementation
+
+		public string[] CommandConstants { get { return new [] { "f", "-", "+", "|", "[", "]" }; } }
+
+		public void Run (ILSystem lSystem, IDrawContext drawCtx, int generation, string c, float angle, float length, float time)
+		{
+			// Standard command symbols:
+			// f signifies a move,
+			// + and - rotate either left or right, | rotates 180 degrees,
+			// [ and ] are for push() and pop(), e.g. offshoot branches,
+			// < and > decrease or increases the segment length,
+			// ( and ) decrease or increases the rotation angle.
+			if (c == "f")
+				drawCtx.Translate(this.SegmentAxis * -Math.Min(length, length*time));
+			else if (c == "-")
+				drawCtx.Rotate(this.AngleAxis, Math.Min(+angle, +angle*time));
+			else if (c == "+")
+				drawCtx.Rotate(this.AngleAxis, Math.Max(-angle, -angle*time));
+			else if (c == "|")
+				drawCtx.Rotate(this.AngleAxis, 180f);
+			else if (c == "[")
+				drawCtx.Push();
+			else if (c == "]")
+				drawCtx.Pop();
+		}
+
+		#endregion
+	}
 }
