@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 using LSystem;
 using LSystem.Commands;
@@ -41,7 +42,7 @@ public class LSystemController : MonoBehaviour {
 		cmd.SegmentLength = this.segmentLength;
 		lsys.AddCommand(cmd);
 
-		this.segmentDrawer = new CylinderSegmentDrawer();
+		this.segmentDrawer = new VectorLineSegmentDrawer();
 		var segCmd = new SegmentCommand();
 		segCmd.Segment = this.segmentDrawer;
 		segCmd.SegmentAxis = this.segmentAxis;
@@ -69,15 +70,23 @@ public class LSystemController : MonoBehaviour {
 public class VectorLineSegmentDrawer : ISegmentDrawer
 {
 	private Dictionary<int, VectorLine> lines = new Dictionary<int, VectorLine>();
+	private HashSet<int> visited = new HashSet<int>();
 
 	#region ISegmentDrawer implementation
 
 	public void DrawStart()
 	{
+		this.visited.Clear();
 	}
 
 	public void DrawEnd()
 	{
+		foreach (var item in this.lines.Where(l => !this.visited.Contains(l.Key)).ToArray())
+		{
+			var line = item.Value;
+			VectorLine.Destroy(ref line);
+			this.lines.Remove(item.Key);
+		}
 	}
 	
 	public void Segment (Vector3 from, Vector3 to, int generation, float time, int id)
@@ -94,6 +103,8 @@ public class VectorLineSegmentDrawer : ISegmentDrawer
 			line = VectorLine.SetLine3D(Color.white, from, to);
 			this.lines[id] = line;
 		}
+
+		this.visited.Add(id);
 	}
 
 	#endregion
