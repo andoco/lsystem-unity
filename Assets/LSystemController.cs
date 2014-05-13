@@ -17,7 +17,7 @@ public class LSystemController : MonoBehaviour {
 	public Vector3 angleAxis = Vector3.forward;
 	public float angle = 20f;
 	public Vector3 segmentAxis = Vector3.up;
-	public float segmentLength = 1;
+	public float segmentLength = 0.5f;
 
 	// Use this for initialization
 	void Start () {
@@ -124,12 +124,10 @@ public class CylinderSegmentDrawer : ISegmentDrawer
 
 	public void DrawEnd()
 	{
-		foreach (var item in this.segments)
+		foreach (var item in this.segments.Where(x => !this.visited.Contains(x.Key)).ToArray())
 		{
-			if (!this.visited.Contains(item.Key))
-			{
-				item.Value.renderer.enabled = false;
-			}
+			GameObject.Destroy(item.Value.gameObject);
+			this.segments.Remove(item.Key);
 		}
 	}
 	
@@ -145,7 +143,6 @@ public class CylinderSegmentDrawer : ISegmentDrawer
 		seg.localScale = (new Vector3(0.25f, 1f, 0.25f)) * (Vector3.Distance(from, to) * 0.5f);
 		seg.position = Vector3.Lerp(from, to, 0.5f);
 		seg.localRotation = Quaternion.FromToRotation(Vector3.up, to - from);
-		seg.renderer.enabled = true;
 
 		this.visited.Add(id);
 	}
